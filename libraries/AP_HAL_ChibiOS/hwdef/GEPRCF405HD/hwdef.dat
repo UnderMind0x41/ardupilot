@@ -1,0 +1,193 @@
+# hw definition file for GEPRC F405 HD V2
+# ported from Betaflight GEPRCF405_BT_HD configuration
+#
+# MCU: STM32F405, 8MHz crystal
+# IMU: ICM42688P / MPU6000 on SPI3
+# Baro: BMP280 on I2C2 (PB10/PB11, betaflight: baro_i2c_device = 2)
+# OSD: MAX7456 on SPI1
+# Flash: W25Q128FV on SPI2
+# 7 motor outputs, LED strip (Motor 7 shares PB1 with LED strip)
+
+# MCU class and specific type
+MCU STM32F4xx STM32F405xx
+
+# board ID. See Tools/AP_Bootloader/board_types.txt
+APJ_BOARD_ID AP_HW_GEPRCF405HD
+
+# crystal frequency, from betaflight: system_hse_mhz = 8
+OSCILLATOR_HZ 8000000
+
+define STM32_ST_USE_TIMER 5
+define CH_CFG_ST_RESOLUTION 32
+
+# reserve 64k for bootloader and storage
+FLASH_RESERVE_START_KB 64
+FLASH_SIZE_KB 1024
+
+define HAL_STORAGE_SIZE 15360
+STORAGE_FLASH_PAGE 1
+
+# ----- I2C bus -----
+# I2C1 (PB8/PB9): external compass/mag
+# I2C2 (PB10/PB11): barometer BMP280 (betaflight: baro_i2c_device = 2)
+I2C_ORDER I2C1 I2C2
+
+PB8  I2C1_SCL I2C1
+PB9  I2C1_SDA I2C1
+PB10 I2C2_SCL I2C2
+PB11 I2C2_SDA I2C2
+
+# ----- Serial ports -----
+# order of UARTs (and USB)
+# SERIAL0 = USB
+# SERIAL1 = USART1 (PB6/PB7)
+# SERIAL2 = USART2 (PA2/PA3)
+# SERIAL3 = USART3 (PC10/PC11)
+# SERIAL4 = UART4  (PA0/PA1)
+# SERIAL5 = UART5  (PC12/PD2)
+# SERIAL6 = USART6 (PC6/PC7) — also RC input
+SERIAL_ORDER OTG1 USART1 USART2 USART3 UART4 UART5 USART6
+
+# USB
+PA11 OTG_FS_DM OTG1
+PA12 OTG_FS_DP OTG1
+
+# USART1
+PB6 USART1_TX USART1
+PB7 USART1_RX USART1
+
+# USART2
+PA2 USART2_TX USART2
+PA3 USART2_RX USART2
+
+# USART3
+PC10 USART3_TX USART3
+PC11 USART3_RX USART3 NODMA
+
+# UART4
+PA0 UART4_TX UART4
+PA1 UART4_RX UART4 NODMA
+
+# UART5
+PC12 UART5_TX UART5
+PD2  UART5_RX UART5 NODMA
+
+# USART6 — also serves as RC input via RCININT on PC7
+PC6 USART6_TX USART6
+PC7 USART6_RX USART6 NODMA
+
+# ----- LEDs -----
+define AP_NOTIFY_GPIO_LED_2_ENABLED 1
+PC14 LED_GREEN OUTPUT LOW GPIO(0)
+PC15 LED_BLUE  OUTPUT LOW GPIO(1)
+
+define HAL_GPIO_A_LED_PIN 0
+define HAL_GPIO_B_LED_PIN 1
+
+# ----- Buzzer -----
+# betaflight: beeper_inversion = ON, beeper_od = OFF → active high
+PC13 BUZZER OUTPUT GPIO(80) LOW
+define HAL_BUZZER_PIN 80
+define HAL_BUZZER_ON 1
+
+# ----- SPI1: OSD (MAX7456) -----
+PA5 SPI1_SCK  SPI1
+PA6 SPI1_MISO SPI1
+PA7 SPI1_MOSI SPI1
+PA4 OSD_CS CS
+
+# ----- SPI2: Flash (W25Q128FV) -----
+PB13 SPI2_SCK  SPI2
+PB14 SPI2_MISO SPI2
+PB15 SPI2_MOSI SPI2
+PB12 FLASH_CS CS
+
+# ----- SPI3: Gyro (ICM42688P / MPU6000) -----
+PB3  SPI3_SCK  SPI3
+PB4  SPI3_MISO SPI3
+PB5  SPI3_MOSI SPI3
+PA15 GYRO_CS CS
+PC3  GYRO_EXT_INT INPUT   # gyro EXTI / data ready
+
+# ----- ADC -----
+PC1 BATT_VOLTAGE_SENS ADC1 SCALE(1)
+PC0 BATT_CURRENT_SENS ADC1 SCALE(1)
+PC2 RSSI_ADC_PIN      ADC1 SCALE(1)
+
+# default battery setup
+define HAL_BATT_MONITOR_DEFAULT 4
+define HAL_BATT_VOLT_PIN 11
+define HAL_BATT_CURR_PIN 10
+define HAL_BATT_VOLT_SCALE 11.0
+define HAL_BATT_CURR_SCALE 17.9
+
+# analog RSSI pin (PC2 = ADC channel 12)
+define BOARD_RSSI_ANA_PIN 12
+
+# ----- PWM outputs -----
+# 7 motor outputs matching Betaflight motor order
+# NOTE: PB10/PB11 are I2C2 (baro), NOT motor outputs
+PA8  TIM1_CH1 TIM1 PWM(1) GPIO(50) BIDIR   # Motor 1
+PA9  TIM1_CH2 TIM1 PWM(2) GPIO(51)          # Motor 2
+PA10 TIM1_CH3 TIM1 PWM(3) GPIO(52)          # Motor 3
+PC8  TIM8_CH3 TIM8 PWM(4) GPIO(53)          # Motor 4
+PC9  TIM8_CH4 TIM8 PWM(5) GPIO(54)          # Motor 5
+PB0  TIM3_CH3 TIM3 PWM(6) GPIO(55)          # Motor 6
+PB1  TIM3_CH4 TIM3 PWM(7) GPIO(56)          # Motor 7 / WS2812 LED strip (betaflight: shared pin)
+
+# ----- SPI devices -----
+# ICM42688P gyro/accel on SPI3
+SPIDEV icm42688 SPI3 DEVID1 GYRO_CS MODE3 2*MHZ 8*MHZ
+
+# MPU6000 fallback (same bus/CS, board supports both)
+SPIDEV mpu6000  SPI3 DEVID2 GYRO_CS MODE3 1*MHZ 8*MHZ
+
+# MAX7456 OSD on SPI1
+SPIDEV osd SPI1 DEVID1 OSD_CS MODE0 10*MHZ 10*MHZ
+
+# W25Q128FV flash on SPI2
+SPIDEV dataflash SPI2 DEVID1 FLASH_CS MODE3 32*MHZ 32*MHZ
+
+# ----- IMU -----
+# probe ICM42688P first, then MPU6000
+IMU Invensensev3 SPI:icm42688 ROTATION_PITCH_180
+IMU Invensense   SPI:mpu6000  ROTATION_PITCH_180
+define HAL_DEFAULT_INS_FAST_SAMPLE 1
+
+# ----- Barometer -----
+# BMP280 on I2C2 (betaflight: baro_i2c_device = 2, I2C_SCL2=B10, I2C_SDA2=B11)
+# one baro, multiple possible choices for different board variants
+BARO BMP280 I2C:1:0x76
+BARO DPS310 I2C:1:0x76
+define AP_BARO_BACKEND_DEFAULT_ENABLED 0
+define AP_BARO_BMP280_ENABLED 1
+define AP_BARO_DPS280_ENABLED 1
+
+# ----- Compass -----
+# no built-in compass, probe external on I2C
+define ALLOW_ARM_NO_COMPASS
+define AP_COMPASS_PROBING_ENABLED 1
+define HAL_I2C_INTERNAL_MASK 0
+define HAL_COMPASS_AUTO_ROT_DEFAULT 2
+
+# ----- Dataflash logging -----
+define HAL_LOGGING_DATAFLASH_ENABLED 1
+
+# ----- OSD -----
+define OSD_ENABLED 1
+define HAL_OSD_TYPE_DEFAULT 1
+ROMFS_WILDCARD libraries/AP_OSD/fonts/font0.bin
+
+# ----- PINIO (VTX power etc.) -----
+# betaflight: PINIO1=A13, PINIO2=A14 (VTX power)
+# NOTE: PA13/PA14 are also SWD pins — disables debug when used
+PA13 PINIO1 OUTPUT GPIO(81) LOW
+PA14 PINIO2 OUTPUT GPIO(82) LOW
+define RELAY1_PIN_DEFAULT 81
+define RELAY2_PIN_DEFAULT 82
+
+# ----- LED type -----
+define DEFAULT_NTF_LED_TYPES 257
+
+# ----- Minimize flash usage for FPV/OSD boards -----
+include ../include/minimize_fpv_osd.inc

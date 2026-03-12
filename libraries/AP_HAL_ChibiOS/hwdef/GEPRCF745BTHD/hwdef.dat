@@ -158,8 +158,12 @@ define AP_COMPASS_QMC5883L_ENABLED 1
 define AP_COMPASS_QMC5883P_ENABLED 1
 
 # one BARO
-BARO BMP280 I2C:0:0x76
+BARO BMP280 I2C:0:0x77
 BARO SPL06  I2C:0:0x76
+BARO MS5611 I2C:0:0x77
+BARO DPS310 I2C:0:0x76
+BARO DPS310 I2C:0:0x77
+BARO BMP280 I2C:0:0x76
 
 define HAL_OS_FATFS_IO 1
 define HAL_LOGGER_MIN_MB_FREE 25
@@ -175,10 +179,11 @@ include ../include/minimize_fpv_osd.inc
 define HAL_PARACHUTE_ENABLED 0
 include ../include/no_bootloader_DFU.inc
 
-#only enable BMP280 Baro
+# enable Baro
 define AP_BARO_BACKEND_DEFAULT_ENABLED 0
 define AP_BARO_BMP280_ENABLED 1
 define AP_BARO_MS5611_ENABLED 1
+define AP_BARO_DPS310_ENABLED 1
 define AP_BARO_SPL06_ENABLED 1
 
 # need to probe external baros even 'though we're minimised to allow custom build options:

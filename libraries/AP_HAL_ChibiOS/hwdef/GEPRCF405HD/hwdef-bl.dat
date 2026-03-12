@@ -1,0 +1,35 @@
+# hw definition file for processing by chibios_pins.py
+# for GEPRC F405 HD V2 bootloader
+
+# MCU class and specific type
+MCU STM32F4xx STM32F405xx
+
+# board ID. See Tools/AP_Bootloader/board_types.txt
+APJ_BOARD_ID AP_HW_GEPRCF405HD
+
+# crystal frequency, from betaflight: system_hse_mhz = 8
+OSCILLATOR_HZ 8000000
+
+FLASH_SIZE_KB 1024
+
+# bootloader is installed at zero offset
+FLASH_RESERVE_START_KB 0
+
+# the location where the bootloader will put the firmware
+FLASH_BOOTLOADER_LOAD_KB 64
+
+# LEDs (active low based on betaflight config)
+PC14 LED_BOOTLOADER OUTPUT LOW GPIO(0)
+PC15 LED_ACTIVITY  OUTPUT LOW GPIO(1)
+define HAL_LED_ON 0
+
+# order of UARTs
+SERIAL_ORDER OTG1
+
+PA11 OTG_FS_DM OTG1
+PA12 OTG_FS_DP OTG1
+
+# Add CS pins to ensure they are high in bootloader
+PA4  OSD_CS   CS    # MAX7456 OSD on SPI1
+PB12 FLASH_CS CS    # W25Q128FV flash on SPI2
+PA15 GYRO_CS  CS    # ICM42688P/MPU6000 gyro on SPI3
