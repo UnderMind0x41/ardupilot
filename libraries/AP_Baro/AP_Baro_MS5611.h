@@ -115,4 +115,15 @@ public:
     }
 };
 
+#else
+
+// Backport compatibility: allow generated AP_Baro_MS5611::probe() references
+// to compile even when the MS56XX backend is disabled.
+class AP_Baro_MS5611 {
+public:
+    static AP_Baro_Backend *probe(...) {
+        return nullptr;
+    }
+};
+
 #endif  // AP_BARO_MS56XX_ENABLED
