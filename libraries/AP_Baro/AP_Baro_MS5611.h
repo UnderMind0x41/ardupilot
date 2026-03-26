@@ -107,4 +107,12 @@ private:
     enum MS56XX_TYPE _ms56xx_type;
 };
 
+// Backport compatibility: older hwdef generation may emit AP_Baro_MS5611::probe().
+class AP_Baro_MS5611 {
+public:
+    static AP_Baro_Backend *probe(AP_Baro &baro, AP_HAL::OwnPtr<AP_HAL::Device> dev) {
+        return AP_Baro_MS56XX::probe_5611(baro, std::move(dev));
+    }
+};
+
 #endif  // AP_BARO_MS56XX_ENABLED
