@@ -420,6 +420,28 @@ void AP_Vehicle::setup()
     // init_ardupilot is where the vehicle does most of its initialisation.
     init_ardupilot();
 
+
+/*
+// Reserved for SVFFI Generator connection
+#ifdef HAL_PERIPH_ENABLE_EFI
+    if (efi.enabled() && g.efi_port >= 0) {
+        auto *uart = hal.serial(g.efi_port);
+        if (uart != nullptr) {
+            uart->begin(g.efi_baudrate);
+            serial_manager.set_protocol_and_baud(g.efi_port, AP_SerialManager::SerialProtocol_EFI, g.efi_baudrate);
+            efi.init();
+        }
+    }
+#endif
+*/
+#if HAL_EFI_ENABLED
+    // Important for SVFFI Generator connection in ArduPlane
+    // Main initialisation of EFI. This needs to be done before scripting as some
+    // EFI backends need to exist before Lua scripts start, since EFI driver
+    // scripts look up the backend during load.
+    efi.init();
+#endif
+
 #if AP_SCRIPTING_ENABLED
     scripting.init();
 #endif // AP_SCRIPTING_ENABLED
@@ -480,11 +502,6 @@ void AP_Vehicle::setup()
 
 #if AP_OPENDRONEID_ENABLED
     opendroneid.init();
-#endif
-
-// init EFI monitoring
-#if HAL_EFI_ENABLED
-    efi.init();
 #endif
 
 #if AP_TEMPERATURE_SENSOR_ENABLED
