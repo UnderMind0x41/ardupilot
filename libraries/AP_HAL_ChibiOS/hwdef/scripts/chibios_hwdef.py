@@ -1707,6 +1707,18 @@ INCLUDE common.ld
             driver = a[0]
             if len(a) > 1 and a[1].startswith('probe'):
                 probe = a[1]
+            # AP_Baro MS56xx drivers were consolidated into AP_Baro_MS56XX.
+            # Keep legacy hwdef BARO names working by rewriting probe targets.
+            if len(a) == 1:
+                ms56xx_probe_map = {
+                    'MS5611': 'probe_5611',
+                    'MS5607': 'probe_5607',
+                    'MS5637': 'probe_5637',
+                    'MS5837': 'probe_5837',
+                }
+                if driver in ms56xx_probe_map:
+                    probe = ms56xx_probe_map[driver]
+                    driver = 'MS56XX'
             for i in range(1, len(dev)):
                 if dev[i].startswith("SPI:"):
                     dev[i] = self.parse_spi_device(dev[i])
