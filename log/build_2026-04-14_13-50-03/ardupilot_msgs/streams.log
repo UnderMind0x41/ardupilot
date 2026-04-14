@@ -1,0 +1,59 @@
+[0.008s] Invoking command in '/home/kirillz/Desktop/DEV/arducopter-sim-ros2-gazebo/ardupilot/build/ardupilot_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com VIRTUAL_ENV_PROMPT=(.venv) /usr/bin/cmake /home/kirillz/Desktop/DEV/arducopter-sim-ros2-gazebo/ardupilot/Tools/ros2/ardupilot_msgs -DCMAKE_INSTALL_PREFIX=/home/kirillz/Desktop/DEV/arducopter-sim-ros2-gazebo/ardupilot/install/ardupilot_msgs
+[0.057s] -- The C compiler identification is GNU 13.3.0
+[0.112s] -- The CXX compiler identification is GNU 13.3.0
+[0.131s] -- Detecting C compiler ABI info
+[0.194s] -- Detecting C compiler ABI info - done
+[0.200s] -- Check for working C compiler: /usr/lib/ccache/cc - skipped
+[0.200s] -- Detecting C compile features
+[0.200s] -- Detecting C compile features - done
+[0.212s] -- Detecting CXX compiler ABI info
+[0.292s] -- Detecting CXX compiler ABI info - done
+[0.299s] -- Check for working CXX compiler: /usr/lib/ccache/c++ - skipped
+[0.299s] -- Detecting CXX compile features
+[0.300s] -- Detecting CXX compile features - done
+[0.302s] -- Found ament_cmake: 2.5.5 (/opt/ros/jazzy/share/ament_cmake/cmake)
+[0.390s] -- Found Python3: /home/kirillz/Desktop/DEV/arducopter-sim-ros2-gazebo/.venv/bin/python3 (found version "3.12.3") found components: Interpreter 
+[0.482s] -- Found geometry_msgs: 5.3.6 (/opt/ros/jazzy/share/geometry_msgs/cmake)
+[0.537s] -- Found rosidl_generator_c: 4.6.7 (/opt/ros/jazzy/share/rosidl_generator_c/cmake)
+[0.551s] -- Found rosidl_generator_cpp: 4.6.7 (/opt/ros/jazzy/share/rosidl_generator_cpp/cmake)
+[0.569s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.589s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.656s] -- Found rosidl_default_generators: 1.6.0 (/opt/ros/jazzy/share/rosidl_default_generators/cmake)
+[0.671s] -- Found rosidl_adapter: 4.6.7 (/opt/ros/jazzy/share/rosidl_adapter/cmake)
+[0.817s] [31mCMake Error at /opt/ros/jazzy/share/rosidl_adapter/cmake/rosidl_adapt_interfaces.cmake:57 (message):
+[0.817s]   
+[0.817s]   execute_process(/home/kirillz/Desktop/DEV/arducopter-sim-ros2-gazebo/.venv/bin/python3
+[0.817s]   -m rosidl_adapter --package-name ardupilot_msgs --arguments-file
+[0.818s]   /home/kirillz/Desktop/DEV/arducopter-sim-ros2-gazebo/ardupilot/build/ardupilot_msgs/rosidl_adapter__arguments__ardupilot_msgs.json
+[0.818s]   --output-dir
+[0.818s]   /home/kirillz/Desktop/DEV/arducopter-sim-ros2-gazebo/ardupilot/build/ardupilot_msgs/rosidl_adapter/ardupilot_msgs
+[0.818s]   --output-file
+[0.818s]   /home/kirillz/Desktop/DEV/arducopter-sim-ros2-gazebo/ardupilot/build/ardupilot_msgs/rosidl_adapter/ardupilot_msgs.idls)
+[0.818s]   returned error code 1:
+[0.818s] 
+[0.818s]   Traceback (most recent call last):
+[0.818s] 
+[0.818s]     File "<frozen runpy>", line 198, in _run_module_as_main
+[0.818s]     File "<frozen runpy>", line 88, in _run_code
+[0.818s]     File "/opt/ros/jazzy/lib/python3.12/site-packages/rosidl_adapter/__main__.py", line 19, in <module>
+[0.818s]       sys.exit(main())
+[0.818s]                ^^^^^^
+[0.818s]     File "/opt/ros/jazzy/lib/python3.12/site-packages/rosidl_adapter/main.py", line 53, in main
+[0.818s]       abs_idl_file = convert_to_idl(
+[0.818s]                      ^^^^^^^^^^^^^^^
+[0.818s]     File "/opt/ros/jazzy/lib/python3.12/site-packages/rosidl_adapter/__init__.py", line 18, in convert_to_idl
+[0.819s]       from rosidl_adapter.msg import convert_msg_to_idl
+[0.819s]     File "/opt/ros/jazzy/lib/python3.12/site-packages/rosidl_adapter/msg/__init__.py", line 16, in <module>
+[0.819s]       from rosidl_adapter.resource import expand_template
+[0.819s]     File "/opt/ros/jazzy/lib/python3.12/site-packages/rosidl_adapter/resource/__init__.py", line 19, in <module>
+[0.819s]       import em
+[0.819s] 
+[0.819s]   ModuleNotFoundError: No module named 'em'
+[0.819s] 
+[0.819s] Call Stack (most recent call first):
+[0.819s]   /opt/ros/jazzy/share/rosidl_cmake/cmake/rosidl_generate_interfaces.cmake:132 (rosidl_adapt_interfaces)
+[0.819s]   CMakeLists.txt:15 (rosidl_generate_interfaces)
+[0.819s] 
+[0.819s] [0m
+[0.819s] -- Configuring incomplete, errors occurred!
+[0.825s] Invoked command in '/home/kirillz/Desktop/DEV/arducopter-sim-ros2-gazebo/ardupilot/build/ardupilot_msgs' returned '1': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com VIRTUAL_ENV_PROMPT=(.venv) /usr/bin/cmake /home/kirillz/Desktop/DEV/arducopter-sim-ros2-gazebo/ardupilot/Tools/ros2/ardupilot_msgs -DCMAKE_INSTALL_PREFIX=/home/kirillz/Desktop/DEV/arducopter-sim-ros2-gazebo/ardupilot/install/ardupilot_msgs
