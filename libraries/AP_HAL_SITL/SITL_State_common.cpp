@@ -516,10 +516,17 @@ void SITL_State_Common::update_voltage_current(struct sitl_input &input, float t
 {
     float voltage = 0;
     float current = 0;
-    
+    _battery_depleted = false;
+
     if (_sitl != nullptr) {
         const bool discharge_enabled = (_sitl->batt_discharge != 0);
+        const float batt_capacity_ah = MAX(float(_sitl->batt_capacity_ah), 0.0f);
+        const uint64_t now_us = AP_HAL::micros64();
+
         if (!discharge_enabled) {
+            _fallback_batt_capacity_ah = -1.0f;
+            _fallback_batt_remaining_ah = -1.0f;
+            _fallback_batt_last_us = now_us;
             voltage = _sitl->batt_voltage;
             current = 0.0f;
         } else if (_sitl->state.battery_voltage <= 0) {
@@ -543,10 +550,51 @@ void SITL_State_Common::update_voltage_current(struct sitl_input &input, float t
                 // assume 50A at full throttle
                 current = 50.0f * throttle;
             }
+
+            if (is_positive(batt_capacity_ah)) {
+                const bool capacity_changed = !is_equal(_fallback_batt_capacity_ah, batt_capacity_ah);
+                if (capacity_changed || _fallback_batt_remaining_ah < 0.0f) {
+                    _fallback_batt_capacity_ah = batt_capacity_ah;
+                    _fallback_batt_remaining_ah = batt_capacity_ah;
+                    _fallback_batt_last_us = now_us;
+                }
+
+                float dt = 0.0f;
+                if (_fallback_batt_last_us > 0 && now_us > _fallback_batt_last_us) {
+                    dt = (now_us - _fallback_batt_last_us) * 1.0e-6f;
+                    if (dt > 0.5f) {
+                        dt = 0.0f;
+                    }
+                }
+                _fallback_batt_last_us = now_us;
+
+                _fallback_batt_remaining_ah -= current * dt / 3600.0f;
+                _fallback_batt_remaining_ah = MAX(_fallback_batt_remaining_ah, 0.0f);
+
+                if (!is_positive(_fallback_batt_remaining_ah)) {
+                    _battery_depleted = true;
+                    voltage = 0.0f;
+                    current = 0.0f;
+                }
+            } else {
+                _fallback_batt_capacity_ah = -1.0f;
+                _fallback_batt_remaining_ah = -1.0f;
+                _fallback_batt_last_us = now_us;
+            }
         } else {
+            _fallback_batt_capacity_ah = -1.0f;
+            _fallback_batt_remaining_ah = -1.0f;
+            _fallback_batt_last_us = now_us;
             // FDM provides voltage and current
             voltage = _sitl->state.battery_voltage;
             current = _sitl->state.battery_current;
+            if (discharge_enabled &&
+                is_positive(batt_capacity_ah) &&
+                voltage <= 0.05f * MAX(float(_sitl->batt_voltage), 1.0f)) {
+                _battery_depleted = true;
+                voltage = 0.0f;
+                current = 0.0f;
+            }
         }
     }
 

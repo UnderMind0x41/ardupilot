@@ -170,6 +170,12 @@ void Battery::set_current(float current, bool discharge_enabled)
         remaining_Ah = MAX(0.0f, remaining_Ah);
     }
 
+    if (allow_discharge && !is_positive(remaining_Ah)) {
+        // Emulate a hard low-voltage cutoff once the pack is empty.
+        voltage_filter.reset(0.0f);
+        current = 0.0f;
+    }
+
     float voltage_delta = current * resistance;
     float voltage;
     if (!allow_discharge) {

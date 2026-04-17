@@ -268,6 +268,12 @@ protected:
     SITL::SIM *_sitl;
 
     void update_voltage_current(struct sitl_input &input, float throttle);
+    bool battery_is_depleted() const { return _battery_depleted; }
+
+    bool _battery_depleted = false;
+    float _fallback_batt_capacity_ah = -1.0f;
+    float _fallback_batt_remaining_ah = -1.0f;
+    uint64_t _fallback_batt_last_us = 0;
 };
 
 #endif // CONFIG_HAL_BOARD == HAL_BOARD_SITL

@@ -75,6 +75,47 @@ static float estimate_motor_throttle_without_mask(const struct sitl_input &input
     return throttle_sum / running_motors;
 }
 
+static void force_outputs_off_for_dead_battery(struct sitl_input &input,
+                                               SITL_State_Common::vehicle_type vehicle,
+                                               uint32_t motor_mask)
+{
+    if (motor_mask != 0) {
+        uint8_t bit;
+        while ((bit = __builtin_ffs(motor_mask)) != 0) {
+            const uint8_t motor = bit-1;
+            motor_mask &= ~(1U<<motor);
+            input.servos[motor] = 1000;
+        }
+        return;
+    }
+
+    switch (vehicle) {
+    case SITL_State_Common::ArduSub:
+        for (uint8_t i=0; i<8; i++) {
+            input.servos[i] = 1500;
+        }
+        break;
+    case SITL_State_Common::Rover:
+        input.servos[2] = 1500;
+        break;
+    case SITL_State_Common::ArduPlane:
+        // Keep control surfaces alive but force all propulsion outputs off.
+        input.servos[2] = 1000;
+        for (uint8_t i=4; i<12; i++) {
+            input.servos[i] = 1000;
+        }
+        break;
+    case SITL_State_Common::ArduCopter:
+    case SITL_State_Common::Blimp:
+    case SITL_State_Common::NONE:
+    default:
+        for (uint8_t i=0; i<12; i++) {
+            input.servos[i] = 1000;
+        }
+        break;
+    }
+}
+
 void SITL_State::_set_param_default(const char *parm)
 {
     char *pdup = strdup(parm);
@@ -494,6 +535,10 @@ void SITL_State::_simulator_servos(struct sitl_input &input)
     }
 
     update_voltage_current(input, throttle);
+    if (battery_is_depleted()) {
+        force_outputs_off_for_dead_battery(input, _vehicle, _sitl->state.motor_mask);
+        _sitl->throttle = 0.0f;
+    }
 }
 
 void SITL_State::init(int argc, char * const argv[])
