@@ -115,6 +115,12 @@ const AP_Param::GroupInfo SIM::var_info[] = {
     // @DisplayName: Sonar rotation
     // @Description: Sonar rotation from rotations enumeration
     AP_GROUPINFO("SONAR_ROT",     17, SIM,  sonar_rot, Rotation::ROTATION_PITCH_270),
+    // @Param: BAT_DISCHRG
+    // @DisplayName: Simulated battery discharge
+    // @Description: Enable battery discharge simulation from motor current draw
+    // @Values: 0:Disabled,1:Enabled
+    // @User: Advanced
+    AP_GROUPINFO("BAT_DISCHRG",   18, SIM,  batt_discharge, 1),
     // @Param: BATT_VOLTAGE
     // @DisplayName: Simulated battery voltage
     // @Description: Simulated battery (constant) voltage

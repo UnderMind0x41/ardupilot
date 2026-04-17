@@ -153,9 +153,10 @@ protected:
 
 private:
     // exposed area times coefficient of drag
-    float areaCd;
-    float mass;
-    float last_param_voltage;
+    float areaCd = 0.0f;
+    float mass = 0.0f;
+    float last_param_voltage = -1.0f;
+    float last_param_capacity = -1.0f;
 #if AP_SIM_ENABLED
     Battery *battery;
 #endif

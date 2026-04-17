@@ -134,8 +134,6 @@ void QuadPlane::update(const struct sitl_input &input)
     // estimate voltage and current
     frame->current_and_voltage(battery_voltage, battery_current);
 
-    battery.set_current(battery_current);
-
     float throttle;
     if (reverse_thrust) {
         throttle = filtered_servo_angle(input, 2);
@@ -145,6 +143,12 @@ void QuadPlane::update(const struct sitl_input &input)
     // assume 20A at full fwd throttle
     throttle = fabsf(throttle);
     battery_current += 20 * throttle;
+    if (sitl->batt_discharge != 0) {
+        battery.set_current(battery_current, true);
+    } else {
+        battery.set_current(0.0f, false);
+        battery_current = 0.0f;
+    }
     
     rot_accel += quad_rot_accel;
     accel_body += quad_accel_body;

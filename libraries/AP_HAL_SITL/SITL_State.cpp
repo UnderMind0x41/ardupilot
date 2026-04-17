@@ -29,6 +29,52 @@ extern const AP_HAL::HAL& hal;
 
 using namespace HALSITL;
 
+static float average_motor_throttle_from_mask(const struct sitl_input &input, uint32_t mask, uint8_t &running_motors)
+{
+    float throttle_sum = 0.0f;
+    running_motors = 0;
+    uint8_t bit;
+    while ((bit = __builtin_ffs(mask)) != 0) {
+        const uint8_t motor = bit-1;
+        mask &= ~(1U<<motor);
+        const float motor_throttle = constrain_float((input.servos[motor] - 1000) / 1000.0f, 0.0f, 1.0f);
+        if (!is_zero(motor_throttle)) {
+            throttle_sum += motor_throttle;
+            running_motors++;
+        }
+    }
+    if (running_motors == 0) {
+        return 0.0f;
+    }
+    return throttle_sum / running_motors;
+}
+
+/*
+  JSON backends (including Gazebo) may not provide motor_mask.
+  Estimate multicopter throttle from the first motor outputs when armed.
+ */
+static float estimate_motor_throttle_without_mask(const struct sitl_input &input)
+{
+    float throttle_sum = 0.0f;
+    uint8_t running_motors = 0;
+    for (uint8_t motor = 0; motor < 12; motor++) {
+        const uint16_t pwm = input.servos[motor];
+        if (pwm < 1050 || pwm > 2000) {
+            continue;
+        }
+        const float motor_throttle = constrain_float((pwm - 1000) / 1000.0f, 0.0f, 1.0f);
+        if (motor_throttle <= 0.05f) {
+            continue;
+        }
+        throttle_sum += motor_throttle;
+        running_motors++;
+    }
+    if (running_motors < 2) {
+        return 0.0f;
+    }
+    return throttle_sum / running_motors;
+}
+
 void SITL_State::_set_param_default(const char *parm)
 {
     char *pdup = strdup(parm);
@@ -414,22 +460,14 @@ void SITL_State::_simulator_servos(struct sitl_input &input)
     if (_vehicle == ArduPlane) {
         float forward_throttle = constrain_float((input.servos[2] - 1000) / 1000.0f, 0.0f, 1.0f);
         // do a little quadplane dance
-        float hover_throttle = 0.0f;
         uint8_t running_motors = 0;
-        uint32_t mask = _sitl->state.motor_mask;
-        uint8_t bit;
-        while ((bit = __builtin_ffs(mask)) != 0) {
-            uint8_t motor = bit-1;
-            mask &= ~(1U<<motor);
-            float motor_throttle = constrain_float((input.servos[motor] - 1000) / 1000.0f, 0.0f, 1.0f);
-            // update motor_on flag
-            if (!is_zero(motor_throttle)) {
-                hover_throttle += motor_throttle;
-                running_motors++;
-            }
-        }
-        if (running_motors > 0) {
-            hover_throttle /= running_motors;
+        const uint32_t mask = _sitl->state.motor_mask;
+        float hover_throttle = average_motor_throttle_from_mask(input, mask, running_motors);
+        if (running_motors == 0 &&
+            mask == 0 &&
+            is_zero(forward_throttle) &&
+            hal.util->get_soft_armed()) {
+            hover_throttle = estimate_motor_throttle_without_mask(input);
         }
         if (!is_zero(forward_throttle)) {
             throttle = forward_throttle;
@@ -443,20 +481,12 @@ void SITL_State::_simulator_servos(struct sitl_input &input)
     } else {
         // run checks on each motor
         uint8_t running_motors = 0;
-        uint32_t mask = _sitl->state.motor_mask;
-        uint8_t bit;
-        while ((bit = __builtin_ffs(mask)) != 0) {
-            const uint8_t motor = bit-1;
-            mask &= ~(1U<<motor);
-            float motor_throttle = constrain_float((input.servos[motor] - 1000) / 1000.0f, 0.0f, 1.0f);
-            // update motor_on flag
-            if (!is_zero(motor_throttle)) {
-                throttle += motor_throttle;
-                running_motors++;
-            }
-        }
-        if (running_motors > 0) {
-            throttle /= running_motors;
+        const uint32_t mask = _sitl->state.motor_mask;
+        throttle = average_motor_throttle_from_mask(input, mask, running_motors);
+        if (running_motors == 0 &&
+            mask == 0 &&
+            hal.util->get_soft_armed()) {
+            throttle = estimate_motor_throttle_without_mask(input);
         }
     }
     if (_sitl) {

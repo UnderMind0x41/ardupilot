@@ -518,7 +518,11 @@ void SITL_State_Common::update_voltage_current(struct sitl_input &input, float t
     float current = 0;
     
     if (_sitl != nullptr) {
-        if (_sitl->state.battery_voltage <= 0) {
+        const bool discharge_enabled = (_sitl->batt_discharge != 0);
+        if (!discharge_enabled) {
+            voltage = _sitl->batt_voltage;
+            current = 0.0f;
+        } else if (_sitl->state.battery_voltage <= 0) {
             if (_vehicle == ArduSub) {
                 voltage = _sitl->batt_voltage;
                 for (uint8_t i=0; i<6; i++) {
@@ -555,4 +559,3 @@ void SITL_State_Common::update_voltage_current(struct sitl_input &input, float t
 }
 
 #endif // HAL_BOARD_SITL
-

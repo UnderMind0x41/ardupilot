@@ -494,7 +494,17 @@ void Frame::init(const char *frame_str, Battery *_battery)
     // power_factor is ratio of power consumed per newton of thrust
     float power_factor = hover_power / hover_thrust;
 
-    battery->setup(model.battCapacityAh, model.refBatRes, model.maxVoltage);
+    // setup defaults before we read SIM_BATT_* so frame json values become
+    // active unless the user has explicitly overridden the parameters.
+    AP_Param::set_default_by_name("SIM_BATT_VOLTAGE", model.maxVoltage);
+    AP_Param::set_default_by_name("SIM_BATT_CAP_AH", model.battCapacityAh);
+    if (model.battCapacityAh > 0) {
+        AP_Param::set_default_by_name("BATT_CAPACITY", model.battCapacityAh*1000);
+    }
+
+    const float configured_capacity_Ah = MAX(float(AP::sitl()->batt_capacity_ah), 0.0f);
+    battery->setup(configured_capacity_Ah, model.refBatRes, model.maxVoltage);
+    last_param_capacity = configured_capacity_Ah;
 
     if (uint8_t(model.num_motors) != num_motors) {
         ::printf("Warning model expected %u motors and got %u\n", uint8_t(model.num_motors), num_motors);
@@ -514,12 +524,6 @@ void Frame::init(const char *frame_str, Battery *_battery)
         model.moment_of_inertia.z = model.mass * 0.5 * sq(model.diagonal_size*0.5);
     }
 
-    // setup reasonable defaults for battery
-    AP_Param::set_default_by_name("SIM_BATT_VOLTAGE", model.maxVoltage);
-    AP_Param::set_default_by_name("SIM_BATT_CAP_AH", model.battCapacityAh);
-    if (model.battCapacityAh > 0) {
-        AP_Param::set_default_by_name("BATT_CAPACITY", model.battCapacityAh*1000);
-    }
 }
 
 /*
@@ -604,6 +608,12 @@ void Frame::calculate_forces(const Aircraft &aircraft,
 // calculate current and voltage
 void Frame::current_and_voltage(float &voltage, float &current)
 {
+    const float param_capacity = MAX(float(AP::sitl()->batt_capacity_ah), 0.0f);
+    if (!is_equal(last_param_capacity, param_capacity)) {
+        battery->set_capacity(param_capacity);
+        last_param_capacity = param_capacity;
+    }
+
     float param_voltage = AP::sitl()->batt_voltage;
     if (!is_equal(last_param_voltage,param_voltage)) {
         battery->init_voltage(param_voltage);

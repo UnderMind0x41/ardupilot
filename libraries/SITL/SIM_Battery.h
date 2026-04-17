@@ -28,26 +28,28 @@ namespace SITL {
 class Battery {
 public:
     void setup(float _capacity_Ah, float _resistance, float _max_voltage);
+    void set_capacity(float _capacity_Ah);
 
     void init_voltage(float voltage);
 
-    void set_current(float current_amps);
+    void set_current(float current_amps, bool discharge_enabled=true);
     float get_voltage(void) const;
+    float get_remaining_Ah(void) const { return remaining_Ah; }
 
     // return battery temperature in Kelvin:
     float get_temperature(void) const { return temperature.kelvin; }
 
 private:
-    float capacity_Ah;
-    float resistance;
-    float max_voltage;
-    float voltage_set;
-    float remaining_Ah;
-    uint64_t last_us;
+    float capacity_Ah = 0.0f;
+    float resistance = 0.0f;
+    float max_voltage = 0.0f;
+    float voltage_set = 0.0f;
+    float remaining_Ah = 0.0f;
+    uint64_t last_us = 0;
 
     struct {
         float kelvin = 273;
-        uint64_t last_update_micros;
+        uint64_t last_update_micros = 0;
     } temperature;
 
     // 10Hz filter for battery voltage

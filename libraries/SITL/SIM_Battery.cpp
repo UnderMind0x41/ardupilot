@@ -116,9 +116,35 @@ void Battery::set_initial_SoC(float voltage)
 
 void Battery::setup(float _capacity_Ah, float _resistance, float _max_voltage)
 {
-    capacity_Ah = _capacity_Ah;
     resistance = _resistance;
     max_voltage = _max_voltage;
+    set_capacity(_capacity_Ah);
+}
+
+void Battery::set_capacity(float _capacity_Ah)
+{
+    const float new_capacity_Ah = MAX(_capacity_Ah, 0.0f);
+    if (is_equal(new_capacity_Ah, capacity_Ah)) {
+        return;
+    }
+
+    if (!is_positive(new_capacity_Ah)) {
+        capacity_Ah = 0.0f;
+        remaining_Ah = 0.0f;
+        return;
+    }
+
+    if (!is_positive(capacity_Ah)) {
+        // First finite-capacity setup: infer SoC from currently configured battery voltage.
+        capacity_Ah = new_capacity_Ah;
+        const float init_voltage = is_positive(voltage_set) ? voltage_set : max_voltage;
+        set_initial_SoC(init_voltage);
+        return;
+    }
+
+    const float soc = remaining_Ah / capacity_Ah;
+    capacity_Ah = new_capacity_Ah;
+    remaining_Ah = constrain_float(soc * capacity_Ah, 0.0f, capacity_Ah);
 }
 
 void Battery::init_voltage(float voltage)
@@ -128,7 +154,7 @@ void Battery::init_voltage(float voltage)
     set_initial_SoC(voltage);
 }
 
-void Battery::set_current(float current)
+void Battery::set_current(float current, bool discharge_enabled)
 {
     uint64_t now = AP_HAL::micros64();
     float dt = (now - last_us) * 1.0e-6;
@@ -137,13 +163,16 @@ void Battery::set_current(float current)
         dt = 0;
     }
     last_us = now;
-    float delta_Ah = current * dt / 3600;
-    remaining_Ah -= delta_Ah;
-    remaining_Ah = MAX(0, remaining_Ah);
+    const bool allow_discharge = discharge_enabled && is_positive(capacity_Ah);
+    if (allow_discharge) {
+        const float delta_Ah = current * dt / 3600;
+        remaining_Ah -= delta_Ah;
+        remaining_Ah = MAX(0.0f, remaining_Ah);
+    }
 
     float voltage_delta = current * resistance;
     float voltage;
-    if (!is_positive(capacity_Ah)) {
+    if (!allow_discharge) {
         voltage = voltage_set;
     } else {
         voltage = get_resting_voltage(100 * remaining_Ah / capacity_Ah) - voltage_delta;
@@ -152,6 +181,9 @@ void Battery::set_current(float current)
     voltage_filter.apply(voltage, dt);
 
     {
+        if (temperature.last_update_micros == 0) {
+            temperature.last_update_micros = now;
+        }
         const uint64_t temperature_dt = now - temperature.last_update_micros;
         temperature.last_update_micros = now;
         // 1 amp*1 second == 0.1 degrees of energy.  Did those units hurt?

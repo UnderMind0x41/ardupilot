@@ -75,7 +75,13 @@ void MultiCopter::update(const struct sitl_input &input)
     // estimate voltage and current
     frame->current_and_voltage(battery_voltage, battery_current);
 
-    battery.set_current(battery_current);
+    if (sitl->batt_discharge != 0) {
+        battery.set_current(battery_current, true);
+    } else {
+        // keep the battery ideal when discharge simulation is disabled
+        battery.set_current(0.0f, false);
+        battery_current = 0.0f;
+    }
 
     update_dynamics(rot_accel);
     update_external_payload(input);
@@ -87,4 +93,3 @@ void MultiCopter::update(const struct sitl_input &input)
     // update magnetic field
     update_mag_field_bf();
 }
-
